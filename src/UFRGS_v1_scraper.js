@@ -32,4 +32,31 @@ async function getAdmissionType(anoSelecao = date.getFullYear()) {
   return admissionObject;
 }
 
-getAdmissionType();
+async function getCollegeCourseType(
+  anoSelecao = date.getFullYear(),
+  sequenciaSelecao = 'S'
+) {
+  const collegeCourseObject = {};
+  const response = await fetch(`${BASE_URL}/carregaCursos`, {
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body: `anoSelecao=${anoSelecao}&sequenciaSelecao=${sequenciaSelecao}`,
+    method: 'POST',
+  });
+  let text = await response.text();
+  const $ = cheerio.load(text, { decodeEntities: false });
+  $('select[id=selectCurso]')
+    .find('option')
+    .each((i, element) => {
+      if (i === 0) return;
+      const cheerioElement = $(element);
+      const tagValue = cheerioElement.attr('value').toString();
+      let textElement = cheerioElement.text().trim();
+      textElement = iconv.decode(Buffer.from(textElement), 'utf-8');
+      collegeCourseObject[tagValue] = textElement;
+    });
+  return collegeCourseObject;
+}
+
+getCollegeCourseType();
