@@ -62,16 +62,32 @@ async function getCollegeCourseType(
 async function getAdmissionResults(
   anoSelecao = '2019',
   sequenciaSelecao = 'S',
-  codListaSelecao = '2379'
+  codListaSelecao = '2379',
+  retries = 3
 ) {
   const admissionResultsObject = {};
-  const response = await fetch(`${BASE_URL}/carregaDadosDivulgacao`, {
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: `anoSelecao=${anoSelecao}&sequenciaSelecao=${sequenciaSelecao}&codListaSelecao=${codListaSelecao}`,
-    method: 'POST',
-  });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}/carregaDadosDivulgacao`, {
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: `anoSelecao=${anoSelecao}&sequenciaSelecao=${sequenciaSelecao}&codListaSelecao=${codListaSelecao}`,
+      method: 'POST',
+    });
+  } catch (err) {
+    console.log('Error fetching admission results');
+    console.log('Retries left ', retries);
+    if (retries === 0) {
+      throw new Error(err);
+    }
+    return await getAdmissionResults(
+      anoSelecao,
+      sequenciaSelecao,
+      codListaSelecao,
+      --retries
+    );
+  }
   let text = await response.text();
   const $ = cheerio.load(text, { decodeEntities: false });
   $('table')
