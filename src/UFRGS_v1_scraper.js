@@ -113,27 +113,18 @@ async function getAdmissionResults(
 }
 
 async function getFormattedJsonData() {
-  const scrapedCourses = {};
+  const admissionResults = {};
   for (const year of [date.getFullYear()]) {
+    admissionResults[year] = {};
     const admissionObject = await getAdmissionType(year);
     for (const yearIndex in admissionObject) {
-      scrapedCourses[yearIndex] = {};
       for (const admissionTypeId in admissionObject[yearIndex]) {
-        scrapedCourses[yearIndex][admissionTypeId] = await getCollegeCourseType(
-          yearIndex,
-          admissionTypeId
-        );
-      }
-    }
-  }
-  const admissionResults = {};
-  for (const year in scrapedCourses) {
-    admissionResults[year] = {};
-    for (const admissionTypeId in scrapedCourses[year]) {
-      admissionResults[year][admissionTypeId] = {};
-      for (const courseId in scrapedCourses[year][admissionTypeId]) {
-        const data = await getAdmissionResults(year, admissionTypeId, courseId);
-        admissionResults[year][admissionTypeId][courseId] = data;
+        admissionResults[year][admissionTypeId] = {};
+        const courses = await getCollegeCourseType(yearIndex, admissionTypeId);
+        for (const courseId in courses) {
+          const data = await getAdmissionResults(yearIndex, admissionTypeId, courseId);
+          admissionResults[year][admissionTypeId][courseId] = data;
+        }
       }
     }
   }
