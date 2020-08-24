@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const iconv = require('iconv-lite');
+const fs = require('fs');
 const date = new Date();
 
 const BASE_URL =
@@ -108,8 +109,37 @@ async function getAdmissionResults(
           admissionResultsObject[studentRegistrationId][j] = rowElement.text();
         });
     });
-  console.log(admissionResultsObject);
   return admissionResultsObject;
 }
 
-getAdmissionResults();
+async function getFormattedJsonData() {
+  const scrapedCourses = {};
+  for (const year of [date.getFullYear()]) {
+    const admissionObject = await getAdmissionType(year);
+    for (const yearIndex in admissionObject) {
+      scrapedCourses[yearIndex] = {};
+      for (const admissionTypeId in admissionObject[yearIndex]) {
+        scrapedCourses[yearIndex][admissionTypeId] = await getCollegeCourseType(
+          yearIndex,
+          admissionTypeId
+        );
+      }
+    }
+  }
+  const admissionResults = {};
+  for (const year in scrapedCourses) {
+    admissionResults[year] = {};
+    for (const admissionTypeId in scrapedCourses[year]) {
+      admissionResults[year][admissionTypeId] = {};
+      for (const courseId in scrapedCourses[year][admissionTypeId]) {
+        const data = await getAdmissionResults(year, admissionTypeId, courseId);
+        admissionResults[year][admissionTypeId][courseId] = data;
+      }
+    }
+  }
+
+  // saving to disc json object
+  fs.writeFileSync('log.json', JSON.stringify(admissionResults, null, 4));
+}
+
+getFormattedJsonData();
