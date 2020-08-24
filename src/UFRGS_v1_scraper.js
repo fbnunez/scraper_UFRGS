@@ -33,6 +33,7 @@ async function getAdmissionType(anoSelecao = date.getFullYear()) {
   return admissionObject;
 }
 
+// key is the course id, value is the course name
 async function getCollegeCourseType(
   anoSelecao = date.getFullYear(),
   sequenciaSelecao = 'S'
@@ -112,6 +113,11 @@ async function getAdmissionResults(
   return admissionResultsObject;
 }
 
+/**
+ * Builds JSON data with the adimission results;
+ * parses all the adimission results table (there's no API for it);
+ * @returns JSON in object in the following structure YEAR: AdmissionTypeCode: CourseID: Student
+ */
 async function getFormattedJsonData() {
   const admissionResults = {};
   for (const year of [date.getFullYear()]) {
@@ -134,3 +140,8 @@ async function getFormattedJsonData() {
 }
 
 getFormattedJsonData();
+
+/**
+ * @todo
+ * fix html encoding. Some characters are still in unicode/ascii
+ */
