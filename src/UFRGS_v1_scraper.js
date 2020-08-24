@@ -59,4 +59,41 @@ async function getCollegeCourseType(
   return collegeCourseObject;
 }
 
-getCollegeCourseType();
+async function getAdmissionResults(
+  anoSelecao = '2019',
+  sequenciaSelecao = 'S',
+  codListaSelecao = '2379'
+) {
+  const admissionResultsObject = {};
+  const response = await fetch(`${BASE_URL}/carregaDadosDivulgacao`, {
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body: `anoSelecao=${anoSelecao}&sequenciaSelecao=${sequenciaSelecao}&codListaSelecao=${codListaSelecao}`,
+    method: 'POST',
+  });
+  let text = await response.text();
+  const $ = cheerio.load(text, { decodeEntities: false });
+  $('table')
+    .find('tr')
+    .each((i, element) => {
+      let studentRegistrationId;
+      if (i === 0) return;
+      $(element)
+        .find('td')
+        .each((j, row) => {
+          const rowElement = $(row);
+          // console.log(j, rowElement.text());
+          if (j === 0) {
+            studentRegistrationId = rowElement.text();
+            admissionResultsObject[studentRegistrationId] = {};
+            return;
+          }
+          admissionResultsObject[studentRegistrationId][j] = rowElement.text();
+        });
+    });
+  console.log(admissionResultsObject);
+  return admissionResultsObject;
+}
+
+getAdmissionResults();
